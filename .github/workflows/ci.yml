@@ -1,0 +1,82 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  build:
+    name: Build on ${{ matrix.OS }} using Rust ${{ matrix.TOOLCHAIN }}
+    runs-on: ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: [ubuntu-latest, macos-latest, windows-latest]
+        TOOLCHAIN: [stable, nightly]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.TOOLCHAIN }}
+          override: true
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+  lint:
+    name: Check lints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Run clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - name: Run tests
+        run: |
+          curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
+          cargo test --verbose -- --test-threads 1
+          zip -0 ccov.zip $(find . \( -name "playfair*.gc*" \) -print);
+          ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
+          bash <(curl -s https://codecov.io/bash) -f lcov.info;
+        env:
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+          RUSTDOCFLAGS: "-Cpanic=abort"
