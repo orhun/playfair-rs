@@ -2,7 +2,7 @@
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/orhun/playfair-rs/ci.yml)](https://github.com/orhun/playfair-rs/actions)
 [![Crates.io](https://img.shields.io/crates/v/playfair_rs)](https://crates.io/crates/playfair_rs)
-[![docs.rs](https://img.shields.io/docsrs/playfair_rs)](https://docs.rs/playfair_rs/latest)
+[![docs.rs](https://img.shields.io/docsrs/playfair-rs)](https://docs.rs/playfair_rs/latest)
 [![Codecov](https://img.shields.io/codecov/c/gh/orhun/playfair-rs)](https://app.codecov.io/gh/orhun/playfair-rs)
 
 [Playfair cipher](https://en.wikipedia.org/wiki/Playfair_cipher) implemented in Rust.
